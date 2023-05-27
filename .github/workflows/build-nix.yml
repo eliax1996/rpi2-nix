@@ -10,7 +10,10 @@ jobs:
     - uses: cachix/install-nix-action@v20
       with:
         nix_path: nixpkgs=channel:nixos-unstable
-    - run: nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./sd-image.nix
+        extra_nix_config: |
+          system-features = nixos-test benchmark big-parallel kvm
+          boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+    - run: nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./sd-image.nix --argstr system aarch64-linux
     - uses: actions/upload-artifact@v3
       with:
         name: sd-image.img
