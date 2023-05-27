@@ -1,48 +1,16 @@
-# Just a sample workflow if using debian packages for binfmt
-name: nix-build-on-demand-debian
+name: "Test"
 on:
-  workflow_dispatch:
-    inputs:
-      environmentName:
-        description: Environment name that stores configuration.nix
-        required: true
-        default: default
-      
+  pull_request:
+  push:
 jobs:
-  build-custom-image:
-    name: Build custom image
-    if: ${{ github.event.inputs.environmentName != 'default' }}
-    runs-on: ubuntu-20.04
-    environment:
-      name: ${{ github.event.inputs.environmentName }}
+  tests:
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3.5.2
+    - uses: actions/checkout@v3
     - uses: cachix/install-nix-action@v20
       with:
-        nix_path: nixpkgs=channel:nixos-20.09
-        extra_nix_config: |
-          extra-platforms = aarch64-linux
-    - name: Check nix.conf
-      run: cat /etc/nix/nix.conf
-    - uses: myci-actions/add-deb-repo@11
-      with:
-        repo: deb http://http.us.debian.org/debian sid main non-free contrib
-        repo-name: debian-sid
-        keys: 04EE7237B7D453EC
-    - run: |
-        sudo apt -y install qemu-user-static
-    - name: Test binfmt availability
-      run: |
-        cat /proc/sys/fs/binfmt_misc/qemu-aarch64
-        /usr/bin/qemu-aarch64-static --version
-    - name: Extract configuration from secrets
-      run: |
-        cat << EOF >> configuration.custom.sdImage.nix
-        ${{ secrets.CONFIGURATION_NIX }}
-        EOF
-    - name: Build SD Image
-      run: |
-        nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./sd-image.nix
+        nix_path: nixpkgs=channel:nixos-unstable
+    - run: nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./sd-image.nix
     - uses: actions/upload-artifact@v3
       with:
         name: sd-image.img
