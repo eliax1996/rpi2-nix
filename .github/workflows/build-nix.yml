@@ -12,6 +12,7 @@ jobs:
         nix_path: nixpkgs=channel:nixos-unstable
         extra_nix_config: |
           system-features = nixos-test benchmark big-parallel kvm
+          extra-platforms = aarch64-linux arm-linux
           boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
     - run: nix-build '<nixpkgs/nixos>' -A config.system.build.sdImage -I nixos-config=./sd-image.nix --argstr system aarch64-linux
     - uses: actions/upload-artifact@v3
